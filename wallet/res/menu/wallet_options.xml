@@ -66,6 +66,13 @@
         android:showAsAction="never"
         android:title="@string/network_monitor_activity_title"/>
     <item
+        android:id="@+id/btcrdidresolver"
+        android:showAsAction="never"
+        android:title="@string/btcr_did_public_key" />
+    <item
+        android:id="@+id/resolvebtcrdid"
+        android:title="@string/resolvebtcrdid" />
+    <item
         android:id="@+id/wallet_options_preferences"
         android:showAsAction="never"
         android:title="@string/preferences_activity_title"/>

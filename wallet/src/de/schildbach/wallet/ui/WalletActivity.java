@@ -21,6 +21,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.core.VersionedChecksummedBytes;
 
+import androidx.annotation.Nullable;
 import de.schildbach.wallet.Configuration;
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
@@ -31,6 +32,8 @@ import de.schildbach.wallet.ui.InputParser.BinaryInputParser;
 import de.schildbach.wallet.ui.InputParser.StringInputParser;
 import de.schildbach.wallet.ui.backup.BackupWalletDialogFragment;
 import de.schildbach.wallet.ui.backup.RestoreWalletDialogFragment;
+import de.schildbach.wallet.ui.btcrdid.BTCRDIDPublicKeyActivity;
+import de.schildbach.wallet.ui.btcrdid.BTCRDIDResolveActivity;
 import de.schildbach.wallet.ui.monitor.NetworkMonitorActivity;
 import de.schildbach.wallet.ui.preference.PreferenceActivity;
 import de.schildbach.wallet.ui.scan.ScanActivity;
@@ -57,10 +60,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SearchEvent;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
@@ -151,12 +157,12 @@ public final class WalletActivity extends AbstractWalletActivity {
                             viewModel.animationFinished();
                         }
                     });
-                } else if (state == WalletActivityViewModel.EnterAnimationState.FINISHED) {
+                }/* else if (state == WalletActivityViewModel.EnterAnimationState.FINISHED) {
                     getWindow().getDecorView().setBackground(null);
-                }
+                }*/
             }
         });
-        if (savedInstanceState == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        if (savedInstanceState == null /*&& Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP*/)
             viewModel.animateWhenLoadingFinished();
         else
             viewModel.animationFinished();
@@ -201,9 +207,9 @@ public final class WalletActivity extends AbstractWalletActivity {
         final Drawable background = getWindow().getDecorView().getBackground();
         final int duration = getResources().getInteger(android.R.integer.config_mediumAnimTime);
         final Animator splashFadeOut = AnimatorInflater.loadAnimator(WalletActivity.this, R.animator.fade_out_drawable);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             splashFadeOut.setTarget(((LayerDrawable) background).getDrawable(1));
-        else
+        else*/
             splashFadeOut.setDuration(0); // skip this animation, as there is no splash icon
         final AnimatorSet fragmentEnterAnimation = new AnimatorSet();
         final AnimatorSet.Builder fragmentEnterAnimationBuilder = fragmentEnterAnimation.play(splashFadeOut);
@@ -286,12 +292,12 @@ public final class WalletActivity extends AbstractWalletActivity {
 
         final View levitate = contentView.findViewWithTag("levitate");
         if (levitate != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 final ObjectAnimator elevate = ObjectAnimator.ofFloat(levitate, "elevation", 0.0f,
                         levitate.getElevation());
                 elevate.setDuration(duration);
                 fragmentEnterAnimationBuilder.before(elevate);
-            }
+            }*/
             final Drawable levitateBackground = levitate.getBackground();
             final Animator fadeIn = AnimatorInflater.loadAnimator(WalletActivity.this, R.animator.fade_in_drawable);
             fadeIn.setTarget(levitateBackground);
@@ -402,65 +408,73 @@ public final class WalletActivity extends AbstractWalletActivity {
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
         switch (item.getItemId()) {
-        case R.id.wallet_options_request:
-            handleRequestCoins();
-            return true;
+            case R.id.wallet_options_request:
+                handleRequestCoins();
+                return true;
 
-        case R.id.wallet_options_send:
-            handleSendCoins();
-            return true;
+            case R.id.wallet_options_send:
+                handleSendCoins();
+                return true;
 
-        case R.id.wallet_options_scan:
-            handleScan(null);
-            return true;
+            case R.id.wallet_options_scan:
+                handleScan(null);
+                return true;
 
-        case R.id.wallet_options_address_book:
-            AddressBookActivity.start(this);
-            return true;
+            case R.id.wallet_options_address_book:
+                AddressBookActivity.start(this);
+                return true;
 
-        case R.id.wallet_options_exchange_rates:
-            startActivity(new Intent(this, ExchangeRatesActivity.class));
-            return true;
+            case R.id.wallet_options_exchange_rates:
+                startActivity(new Intent(this, ExchangeRatesActivity.class));
+                return true;
 
-        case R.id.wallet_options_sweep_wallet:
-            SweepWalletActivity.start(this);
-            return true;
+            case R.id.wallet_options_sweep_wallet:
+                SweepWalletActivity.start(this);
+                return true;
 
-        case R.id.wallet_options_network_monitor:
-            startActivity(new Intent(this, NetworkMonitorActivity.class));
-            return true;
+            case R.id.wallet_options_network_monitor:
+                startActivity(new Intent(this, NetworkMonitorActivity.class));
+                return true;
 
-        case R.id.wallet_options_restore_wallet:
-            viewModel.showRestoreWalletDialog.setValue(Event.simple());
-            return true;
+            case R.id.wallet_options_restore_wallet:
+                viewModel.showRestoreWalletDialog.setValue(Event.simple());
+                return true;
 
-        case R.id.wallet_options_backup_wallet:
-            viewModel.showBackupWalletDialog.setValue(Event.simple());
-            return true;
+            case R.id.wallet_options_backup_wallet:
+                viewModel.showBackupWalletDialog.setValue(Event.simple());
+                return true;
 
-        case R.id.wallet_options_encrypt_keys:
-            viewModel.showEncryptKeysDialog.setValue(Event.simple());
-            return true;
+            case R.id.wallet_options_encrypt_keys:
+                viewModel.showEncryptKeysDialog.setValue(Event.simple());
+                return true;
 
-        case R.id.wallet_options_preferences:
-            startActivity(new Intent(this, PreferenceActivity.class));
-            return true;
+            case R.id.btcrdidresolver:                                                              //BTCR DID Get public key from TxRef
+                startActivity(new Intent(this, BTCRDIDPublicKeyActivity.class));
+                return true;
 
-        case R.id.wallet_options_safety:
-            viewModel.showHelpDialog.setValue(new Event<>(R.string.help_safety));
-            return true;
+            case R.id.resolvebtcrdid:                                                               //BTCR DID Resolve and get DDO
+                startActivity(new Intent(this, BTCRDIDResolveActivity.class));
+                return true;
 
-        case R.id.wallet_options_technical_notes:
-            viewModel.showHelpDialog.setValue(new Event<>(R.string.help_technical_notes));
-            return true;
+            case R.id.wallet_options_preferences:
+                startActivity(new Intent(this, PreferenceActivity.class));
+                return true;
 
-        case R.id.wallet_options_report_issue:
-            viewModel.showReportIssueDialog.setValue(Event.simple());
-            return true;
+            case R.id.wallet_options_safety:
+                viewModel.showHelpDialog.setValue(new Event<>(R.string.help_safety));
+                return true;
 
-        case R.id.wallet_options_help:
-            viewModel.showHelpDialog.setValue(new Event<>(R.string.help_wallet));
-            return true;
+            case R.id.wallet_options_technical_notes:
+                viewModel.showHelpDialog.setValue(new Event<>(R.string.help_technical_notes));
+                return true;
+
+            case R.id.wallet_options_report_issue:
+                viewModel.showReportIssueDialog.setValue(Event.simple());
+                return true;
+
+            case R.id.wallet_options_help:
+                viewModel.showHelpDialog.setValue(new Event<>(R.string.help_wallet));
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -479,5 +493,16 @@ public final class WalletActivity extends AbstractWalletActivity {
         // Camera/SurfaceView is used while the animation is running.
         enterAnimation.end();
         ScanActivity.startForResult(this, clickView, WalletActivity.REQUEST_CODE_SCAN);
+    }
+
+    @Override
+    public boolean onSearchRequested(SearchEvent searchEvent) {
+        return false;
+    }
+
+    @Nullable
+    @Override
+    public ActionMode onWindowStartingActionMode(ActionMode.Callback callback, int type) {
+        return null;
     }
 }
