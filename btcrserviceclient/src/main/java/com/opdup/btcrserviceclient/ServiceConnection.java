@@ -39,7 +39,7 @@ public class ServiceConnection {
 
     //New getJson method
     public String getJsonString() {
-        StringBuffer response = new StringBuffer();
+        StringBuilder response = new StringBuilder();
         String responseJSON;
         try {
 
@@ -58,8 +58,8 @@ public class ServiceConnection {
                 in.close();
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.print("IOException: " + e.getMessage());
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -68,7 +68,6 @@ public class ServiceConnection {
         }
 
         return responseJSON;
-
     }
 
     public JSONObject getJsonObject() {

@@ -1,6 +1,5 @@
 package com.opdup.btcrserviceclient;
 
-import java.io.IOException;
 import java.net.URL;
 
 public class UtxosForAddress {
@@ -11,9 +10,8 @@ public class UtxosForAddress {
         this.url = url;
     }
 
-    public String getUtxos() throws IOException {
-        ServiceConnection serviceConnection = new ServiceConnection(this.url);
-        return serviceConnection.getJsonString();
+    public String getUtxos() {
+        return new ServiceConnection(this.url).getJsonString();
     }
 
 }

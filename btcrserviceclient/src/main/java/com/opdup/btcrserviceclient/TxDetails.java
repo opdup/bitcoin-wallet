@@ -20,9 +20,7 @@ public class TxDetails {
         this.jsonObject = new ServiceConnection(this.url).getJsonObject();
     }
 
-    public Pair<String, Integer> getTxDetails() {
-
-        Pair<String, Integer> result;
+    private Pair<String, Integer> getTxDetails() {
 
         try {
             this.txId = jsonObject.getString("txid");
@@ -31,9 +29,18 @@ public class TxDetails {
             System.err.print("JSONException: " + e.getMessage());
         }
 
-        result = new Pair<String, Integer>(txId, utxoIndex);
+        return new Pair<>(txId, utxoIndex);
 
-        return result;
+    }
+
+    //Get TxID
+    public String getTxId() {
+        return getTxDetails().first;
+    }
+
+    //get UTXO index
+    public int getUtxoIndex() {
+        return getTxDetails().second;
     }
 
 }

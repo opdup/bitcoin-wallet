@@ -21,7 +21,6 @@ public class ServiceConnectionTest {
 
     private static final int TIMEOUT = 5000;
 
-    //private String BtcrDidString = "did:btcr:x705-jzv2-qqaz-7vuz"; //https://github.com/w3c-ccg/did-hackathon-2018/blob/master/BTCR-DID-Tests.md
     private String txRef = "x705-jzv2-qqaz-7vuz";                  //https://github.com/w3c-ccg/did-hackathon-2018/blob/master/BTCR-DID-Tests.md
     private String address = "mo8pqoxeu4EWSisZ8n94niyvPVJzDL3epg"; //https://github.com/w3c-ccg/did-hackathon-2018/blob/master/BTCR-DID-Tests.md
     private String txId = "80871cf043c1d96f3d716f5bc02daa15a5e534b2a00e81a530fb40aa07ceceb6";   //https://github.com/w3c-ccg/did-hackathon-2018/blob/master/BTCR-DID-Tests.md

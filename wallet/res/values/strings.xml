@@ -356,8 +356,10 @@
     <string name="error_bluetooth">Bluetooth error: %1$s</string>
     <string name="btcr_did_public_key">BTCR DID - Get public key</string>
     <string name="get_public_key">Get Public Key</string>
-    <string name="outputTextBTCRDID">Public Key</string>
+    <string name="outputTextPublicKey">Public Key</string>
     <string name="editTextBTCRDID">Enter BTCR DID</string>
-    <string name="resolvebtcrdid">Resolve BTCR DID</string>
+    <string name="resolvebtcrdid">BTCR DID Resolver</string>
+    <string name="BTCRDIDDDOButton">Resolve BTCR DID</string>
+    <string name="outputTextTip">Tip</string>
 
 </resources>

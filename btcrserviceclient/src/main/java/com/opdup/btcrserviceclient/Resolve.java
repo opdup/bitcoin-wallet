@@ -1,6 +1,7 @@
 package com.opdup.btcrserviceclient;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URL;
@@ -13,23 +14,8 @@ public class Resolve {
         this.url = url;
     }
 
-    //Get String
-    public String resolve() {
-        ServiceConnection serviceConnection = new ServiceConnection(this.url);
-        return serviceConnection.getJsonString();
+    public JSONArray resolve() {
+        return new ServiceConnection(this.url).getJsonArray();
     }
-
-    //Get JSONObject
-    public JSONObject resolveJSONObject() {
-        ServiceConnection serviceConnection = new ServiceConnection(this.url);
-        return serviceConnection.getJsonObject();
-    }
-
-    //Get JSONArray
-    public JSONArray resolveJSONArray() {
-        ServiceConnection serviceConnection = new ServiceConnection(this.url);
-        return serviceConnection.getJsonArray();
-    }
-
 
 }

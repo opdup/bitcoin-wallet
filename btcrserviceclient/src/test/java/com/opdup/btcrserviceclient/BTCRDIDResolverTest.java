@@ -64,7 +64,7 @@ public class BTCRDIDResolverTest {
 
         btcrdidResolver = new BTCRDIDResolver(btcrDid, url);
         try {
-            pubKey = btcrdidResolver.getDDOForTxref();
+            pubKey = btcrdidResolver.getPublicKey();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (JSONException e) {

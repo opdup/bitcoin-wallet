@@ -1,6 +1,7 @@
 package com.opdup.btcrserviceclient;
 
-import java.io.IOException;
+import org.json.JSONObject;
+
 import java.net.URL;
 
 public class Decode {
@@ -11,8 +12,8 @@ public class Decode {
         this.url = url;
     }
 
-    public String decode() throws IOException{
-        return new ServiceConnection(this.url).getJsonString();
+    public JSONObject decode() {
+        return new ServiceConnection(this.url).getJsonObject();
     }
 
 }

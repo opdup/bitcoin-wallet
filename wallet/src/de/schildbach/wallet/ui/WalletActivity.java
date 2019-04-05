@@ -32,8 +32,7 @@ import de.schildbach.wallet.ui.InputParser.BinaryInputParser;
 import de.schildbach.wallet.ui.InputParser.StringInputParser;
 import de.schildbach.wallet.ui.backup.BackupWalletDialogFragment;
 import de.schildbach.wallet.ui.backup.RestoreWalletDialogFragment;
-import de.schildbach.wallet.ui.btcrdid.BTCRDIDPublicKeyActivity;
-import de.schildbach.wallet.ui.btcrdid.BTCRDIDResolveActivity;
+import de.schildbach.wallet.ui.btcrdid.BTCRDIDResolverActivity;
 import de.schildbach.wallet.ui.monitor.NetworkMonitorActivity;
 import de.schildbach.wallet.ui.preference.PreferenceActivity;
 import de.schildbach.wallet.ui.scan.ScanActivity;
@@ -47,16 +46,13 @@ import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.nfc.NdefMessage;
 import android.nfc.NfcAdapter;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -448,12 +444,8 @@ public final class WalletActivity extends AbstractWalletActivity {
                 viewModel.showEncryptKeysDialog.setValue(Event.simple());
                 return true;
 
-            case R.id.btcrdidresolver:                                                              //BTCR DID Get public key from TxRef
-                startActivity(new Intent(this, BTCRDIDPublicKeyActivity.class));
-                return true;
-
             case R.id.resolvebtcrdid:                                                               //BTCR DID Resolve and get DDO
-                startActivity(new Intent(this, BTCRDIDResolveActivity.class));
+                startActivity(new Intent(this, BTCRDIDResolverActivity.class));
                 return true;
 
             case R.id.wallet_options_preferences:

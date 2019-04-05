@@ -1,20 +1,20 @@
 package de.schildbach.wallet.ui.btcrdid;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.ActionMode;
 import android.view.SearchEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.opdup.btcrserviceclient.BTCRDIDResolver;
 
-import org.json.JSONException;
-
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -22,36 +22,68 @@ import androidx.annotation.Nullable;
 import de.schildbach.wallet.R;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
 
-public class BTCRDIDPublicKeyActivity extends AbstractWalletActivity {
+public class BTCRDIDResolverActivity extends AbstractWalletActivity {
 
     private EditText inputText;
     private Button button;
     private TextView textView;
+    private Button getDDOButton;
 
     private String txRef = null;
 
     private void initView() {
         inputText = (EditText) findViewById(R.id.inputText);
         button = (Button) findViewById(R.id.button);
-        textView = (TextView) findViewById(R.id.outputTextBTCRDID);
+        textView = (TextView) findViewById(R.id.outputPubKey);
+        getDDOButton = (Button) findViewById(R.id.getDDOButton);
+        getDDOButton.setVisibility(View.INVISIBLE);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_btcrdidpublickey);
+        setContentView(R.layout.activity_btcrdidresolver);
 
         initView();
 
-        button.setOnClickListener(new View.OnClickListener() {
+        button.setOnClickListener(new View.OnClickListener() {      // Get Public Key button
             @Override
             public void onClick(View v) {
+
                 txRef = inputText.getText().toString();
 
-                System.out.println(txRef);
+                if (txRef.isEmpty()) {
+                    Toast.makeText(getApplicationContext(), "Error: Input is empty", Toast.LENGTH_SHORT).show();
+                }else {
+                    if (txRef.length() < 10) {
+                        Toast.makeText(getApplicationContext(), "Error: BTCR DID not valid", Toast.LENGTH_SHORT).show();
+                    }
+                    if (txRef.substring(0, 9).toLowerCase().equals("did:btcr:")) {
 
-                BTCRDIDTask btcrdidTask = new BTCRDIDTask();
-                btcrdidTask.execute(txRef);
+                        BTCRDIDTask btcrdidTask = new BTCRDIDTask();
+                        btcrdidTask.execute(txRef);
+
+                        inputText.onEditorAction(EditorInfo.IME_ACTION_DONE);
+
+                        getDDOButton.setVisibility(View.VISIBLE);
+                    }else {
+                        Toast.makeText(getApplicationContext(), "Error: BTCR DID not valid", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+            }
+        });
+
+        getDDOButton.setOnClickListener(new View.OnClickListener() {        //get DDO button
+            @Override
+            public void onClick(View v) {
+
+
+
+                Intent intent = new Intent(BTCRDIDResolverActivity.this, BTCRDIDDDOActivity.class);
+                intent.putExtra("txref", txRef);
+                intent.putExtra("pubkey", textView.getText());
+                startActivity(intent);
             }
         });
 
@@ -80,7 +112,7 @@ public class BTCRDIDPublicKeyActivity extends AbstractWalletActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            p = new ProgressDialog(BTCRDIDPublicKeyActivity.this);
+            p = new ProgressDialog(BTCRDIDResolverActivity.this);
             p.setMessage("Please wait...");
             p.setIndeterminate(false);
             p.setCancelable(false);
@@ -92,18 +124,10 @@ public class BTCRDIDPublicKeyActivity extends AbstractWalletActivity {
             try {
                 rootURL = new URL("https://btcr-service.opdup.com/");
 
-                System.out.println(params[0]);
-
                 BTCRDIDResolver btcrdidResolver = new BTCRDIDResolver(params[0], rootURL);
-                publicKey = btcrdidResolver.getDDOForTxref();
-
-                System.out.print(publicKey);
+                publicKey = btcrdidResolver.getPublicKey();
 
             } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
                 e.printStackTrace();
             }
             return publicKey;
@@ -112,15 +136,18 @@ public class BTCRDIDPublicKeyActivity extends AbstractWalletActivity {
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            if (textView!=null){
+            if (textView != null){
                 p.hide();
-                textView.setText(result);
+                if (result == null) {
+                    textView.setText("Not found");
+                } else {
+                    textView.setText(result);
+                }
             } else {
                 p.show();
             }
         }
 
     }
-
 
 }

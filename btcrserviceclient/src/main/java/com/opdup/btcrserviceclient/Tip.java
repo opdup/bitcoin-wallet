@@ -1,44 +1,33 @@
 package com.opdup.btcrserviceclient;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.json.JSONException;
-
-import java.io.IOException;
-import java.net.URL;
+import org.json.JSONObject;
 
 public class Tip {
 
-    private URL url;
+    private JSONArray allTxs;
 
-    private JSONArray jsonArray;
-    private JSONObject jsonObject;
-
-    private String tipJsonString = null;
-
-    public Tip(URL url){
-        this.url = url;
+    public Tip(JSONArray allTxs){
+        this.allTxs = allTxs;
     }
 
-    private String getTipJsonString() throws IOException {
-        return new ServiceConnection(this.url).getJsonString();
-    }
+    public boolean followTip(String txid) {
+        try {
+            for (int i = 1; i < this.allTxs.length(); i++) {
+                JSONObject tx = this.allTxs.getJSONObject(i).getJSONObject("Transaction");
+                JSONArray vin = tx.getJSONArray("vin");
+                String txidVin = vin.getJSONObject(0).getString("txid");
 
-    public String getTip() throws JSONException, IOException {
-        this.tipJsonString = getTipJsonString();
-        this.jsonArray = new JSONArray(tipJsonString);
-        for (int i = 0; i <jsonArray.length(); i++){
-            this.jsonObject = jsonArray.getJSONObject(i);
-            boolean inTipChain = jsonObject.getBoolean("InTipChain");
-            if (inTipChain) {
-                return null; // TODO: Use Java Optionals instead of returning null.
-            }else{
-                return tipJsonString;
+                if (txid.equals(txidVin)) {
+                    return true;            //Transaction has been spent
+                }
+
             }
-
-
+        } catch (JSONException e) {
+            System.err.print("JSONException: " + e.getMessage());
         }
-        return tipJsonString;
+        return false;
     }
 
 }
