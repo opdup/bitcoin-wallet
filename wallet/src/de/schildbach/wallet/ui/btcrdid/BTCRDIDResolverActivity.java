@@ -15,6 +15,9 @@ import android.widget.Toast;
 
 import com.opdup.btcrserviceclient.BTCRDIDResolver;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -30,12 +33,13 @@ public class BTCRDIDResolverActivity extends AbstractWalletActivity {
     private Button getDDOButton;
 
     private String txRef = null;
+    private String ddo = null;
 
     private void initView() {
-        inputText = (EditText) findViewById(R.id.inputText);
-        button = (Button) findViewById(R.id.button);
-        textView = (TextView) findViewById(R.id.outputPubKey);
-        getDDOButton = (Button) findViewById(R.id.getDDOButton);
+        inputText = findViewById(R.id.inputText);
+        button = findViewById(R.id.button);
+        textView = findViewById(R.id.outputPubKey);
+        getDDOButton = findViewById(R.id.getDDOButton);
         getDDOButton.setVisibility(View.INVISIBLE);
     }
 
@@ -77,12 +81,8 @@ public class BTCRDIDResolverActivity extends AbstractWalletActivity {
         getDDOButton.setOnClickListener(new View.OnClickListener() {        //get DDO button
             @Override
             public void onClick(View v) {
-
-
-
                 Intent intent = new Intent(BTCRDIDResolverActivity.this, BTCRDIDDDOActivity.class);
-                intent.putExtra("txref", txRef);
-                intent.putExtra("pubkey", textView.getText());
+                intent.putExtra("ddo", ddo);
                 startActivity(intent);
             }
         });
@@ -126,6 +126,7 @@ public class BTCRDIDResolverActivity extends AbstractWalletActivity {
 
                 BTCRDIDResolver btcrdidResolver = new BTCRDIDResolver(params[0], rootURL);
                 publicKey = btcrdidResolver.getPublicKey();
+                ddo = btcrdidResolver.getDDO();
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();

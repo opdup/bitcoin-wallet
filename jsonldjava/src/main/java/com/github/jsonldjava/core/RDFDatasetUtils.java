@@ -1,14 +1,14 @@
 package com.github.jsonldjava.core;
 
-import static com.github.jsonldjava.core.JsonLdConsts.RDF_LANGSTRING;
-import static com.github.jsonldjava.core.JsonLdConsts.XSD_STRING;
-import static com.github.jsonldjava.core.Regex.HEX;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.github.jsonldjava.core.JsonLdConsts.RDF_LANGSTRING;
+import static com.github.jsonldjava.core.JsonLdConsts.XSD_STRING;
+import static com.github.jsonldjava.core.Regex.HEX;
 
 public class RDFDatasetUtils {
 

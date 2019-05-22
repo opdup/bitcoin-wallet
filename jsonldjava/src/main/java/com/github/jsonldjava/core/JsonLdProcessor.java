@@ -1,7 +1,5 @@
 package com.github.jsonldjava.core;
 
-import static com.github.jsonldjava.utils.Obj.newMap;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -12,6 +10,13 @@ import com.github.jsonldjava.core.JsonLdError.Error;
 import com.github.jsonldjava.impl.NQuadRDFParser;
 import com.github.jsonldjava.impl.NQuadTripleCallback;
 
+import static com.github.jsonldjava.utils.Obj.newMap;
+
+
+/**
+ * Created by noah on 09/04/17.
+ */
+
 /**
  * This class implements the <a href=
  * "http://json-ld.org/spec/latest/json-ld-api/#the-jsonldprocessor-interface" >
@@ -20,25 +25,23 @@ import com.github.jsonldjava.impl.NQuadTripleCallback;
  * returning the results.
  *
  * @author tristan
- *
  */
-public class JsonLdProcessor {
+public abstract class JsonLdProcessor {
+
+    public abstract void onNormalized(Object object);
+
 
     /**
      * Compacts the given input using the context according to the steps in the
      * <a href="http://www.w3.org/TR/json-ld-api/#compaction-algorithm">
      * Compaction algorithm</a>.
      *
-     * @param input
-     *            The input JSON-LD object.
-     * @param context
-     *            The context object to use for the compaction algorithm.
-     * @param opts
-     *            The {@link JsonLdOptions} that are to be sent to the
-     *            compaction algorithm.
+     * @param input   The input JSON-LD object.
+     * @param context The context object to use for the compaction algorithm.
+     * @param opts    The {@link JsonLdOptions} that are to be sent to the
+     *                compaction algorithm.
      * @return The compacted JSON-LD document
-     * @throws JsonLdError
-     *             If there is an error while compacting.
+     * @throws JsonLdError If there is an error while compacting.
      */
     public static Map<String, Object> compact(Object input, Object context, JsonLdOptions opts)
             throws JsonLdError {
@@ -95,14 +98,11 @@ public class JsonLdProcessor {
      * <a href="http://www.w3.org/TR/json-ld-api/#expansion-algorithm">Expansion
      * algorithm</a>.
      *
-     * @param input
-     *            The input JSON-LD object.
-     * @param opts
-     *            The {@link JsonLdOptions} that are to be sent to the expansion
-     *            algorithm.
+     * @param input The input JSON-LD object.
+     * @param opts  The {@link JsonLdOptions} that are to be sent to the expansion
+     *              algorithm.
      * @return The expanded JSON-LD document
-     * @throws JsonLdError
-     *             If there is an error while expanding.
+     * @throws JsonLdError If there is an error while expanding.
      */
     public static List<Object> expand(Object input, JsonLdOptions opts) throws JsonLdError {
         // 1)
@@ -112,7 +112,7 @@ public class JsonLdProcessor {
         if (input instanceof String && ((String) input).contains(":")) {
             try {
                 final RemoteDocument tmp = opts.getDocumentLoader().loadDocument((String) input);
-                input = tmp.getDocument();
+                input = tmp.document;
                 // TODO: figure out how to deal with remote context
             } catch (final Exception e) {
                 throw new JsonLdError(Error.LOADING_DOCUMENT_FAILED, e);
@@ -167,11 +167,9 @@ public class JsonLdProcessor {
      * <a href="http://www.w3.org/TR/json-ld-api/#expansion-algorithm">Expansion
      * algorithm</a>, using the default {@link JsonLdOptions}.
      *
-     * @param input
-     *            The input JSON-LD object.
+     * @param input The input JSON-LD object.
      * @return The expanded JSON-LD document
-     * @throws JsonLdError
-     *             If there is an error while expanding.
+     * @throws JsonLdError If there is an error while expanding.
      */
     public static List<Object> expand(Object input) throws JsonLdError {
         return expand(input, new JsonLdOptions(""));
@@ -263,14 +261,11 @@ public class JsonLdProcessor {
      * <a href="http://www.w3.org/TR/json-ld-api/#flattening-algorithm">
      * Flattening algorithm</a>:
      *
-     * @param input
-     *            The input JSON-LD object.
-     * @param opts
-     *            The {@link JsonLdOptions} that are to be sent to the
-     *            flattening algorithm.
+     * @param input The input JSON-LD object.
+     * @param opts  The {@link JsonLdOptions} that are to be sent to the
+     *              flattening algorithm.
      * @return The flattened JSON-LD document
-     * @throws JsonLdError
-     *             If there is an error while flattening.
+     * @throws JsonLdError If there is an error while flattening.
      */
     public static Object flatten(Object input, JsonLdOptions opts) throws JsonLdError {
         return flatten(input, null, opts);
@@ -282,17 +277,13 @@ public class JsonLdProcessor {
      * "http://json-ld.org/spec/latest/json-ld-framing/#framing-algorithm">
      * Framing Algorithm</a>.
      *
-     * @param input
-     *            The input JSON-LD object.
-     * @param frame
-     *            The frame to use when re-arranging the data of input; either
-     *            in the form of an JSON object or as IRI.
-     * @param opts
-     *            The {@link JsonLdOptions} that are to be sent to the framing
-     *            algorithm.
+     * @param input The input JSON-LD object.
+     * @param frame The frame to use when re-arranging the data of input; either
+     *              in the form of an JSON object or as IRI.
+     * @param opts  The {@link JsonLdOptions} that are to be sent to the framing
+     *              algorithm.
      * @return The framed JSON-LD document
-     * @throws JsonLdError
-     *             If there is an error while framing.
+     * @throws JsonLdError If there is an error while framing.
      */
     public static Map<String, Object> frame(Object input, Object frame, JsonLdOptions opts)
             throws JsonLdError {
@@ -302,43 +293,23 @@ public class JsonLdProcessor {
         }
         // TODO string/IO input
 
-        // 2. Set expanded input to the result of using the expand method using
-        // input and options.
         final Object expandedInput = expand(input, opts);
-
-        // 3. Set expanded frame to the result of using the expand method using
-        // frame and options with expandContext set to null and the
-        // frameExpansion option set to true.
-        final Object savedExpandedContext = opts.getExpandContext();
-        opts.setExpandContext(null);
-        opts.setFrameExpansion(true);
         final List<Object> expandedFrame = expand(frame, opts);
-        opts.setExpandContext(savedExpandedContext);
 
-        // 4. Set context to the value of @context from frame, if it exists, or
-        // to a new empty
-        // context, otherwise.
         final JsonLdApi api = new JsonLdApi(expandedInput, opts);
+        final List<Object> framed = api.frame(expandedInput, expandedFrame);
         final Context activeCtx = api.context
                 .parse(((Map<String, Object>) frame).get(JsonLdConsts.CONTEXT));
-        final List<Object> framed = api.frame(expandedInput, expandedFrame);
-        if (opts.getPruneBlankNodeIdentifiers()) {
-            JsonLdUtils.pruneBlankNodes(framed);
-        }
+
         Object compacted = api.compact(activeCtx, null, framed, opts.getCompactArrays());
-        final Map<String, Object> rval = activeCtx.serialize();
-        final boolean addGraph = ((!(compacted instanceof List)) && !opts.getOmitGraph());
-        if (addGraph && !(compacted instanceof List)) {
+        if (!(compacted instanceof List)) {
             final List<Object> tmp = new ArrayList<Object>();
             tmp.add(compacted);
             compacted = tmp;
         }
-        if (addGraph || (compacted instanceof List)) {
-            final String alias = activeCtx.compactIri(JsonLdConsts.GRAPH);
-            rval.put(alias, compacted);
-        } else if (!addGraph && (compacted instanceof Map)) {
-            rval.putAll((Map) compacted);
-        }
+        final String alias = activeCtx.compactIri(JsonLdConsts.GRAPH);
+        final Map<String, Object> rval = activeCtx.serialize();
+        rval.put(alias, compacted);
         JsonLdUtils.removePreserve(activeCtx, rval, opts);
         return rval;
     }
@@ -346,7 +317,7 @@ public class JsonLdProcessor {
     /**
      * A registry for RDF Parsers (in this case, JSONLDSerializers) used by
      * fromRDF if no specific serializer is specified and options.format is set.
-     *
+     * <p>
      * TODO: this would fit better in the document loader class
      */
     private static Map<String, RDFParser> rdfParsers = new LinkedHashMap<String, RDFParser>() {
@@ -367,19 +338,16 @@ public class JsonLdProcessor {
     /**
      * Converts an RDF dataset to JSON-LD.
      *
-     * @param dataset
-     *            a serialized string of RDF in a format specified by the format
-     *            option or an RDF dataset to convert.
-     * @param options
-     *            the options to use: [format] the format if input is not an
-     *            array: 'application/nquads' for N-Quads (default).
-     *            [useRdfType] true to use rdf:type, false to use @type
-     *            (default: false). [useNativeTypes] true to convert XSD types
-     *            into native types (boolean, integer, double), false not to
-     *            (default: true).
+     * @param dataset a serialized string of RDF in a format specified by the format
+     *                option or an RDF dataset to convert.
+     * @param options the options to use: [format] the format if input is not an
+     *                array: 'application/nquads' for N-Quads (default).
+     *                [useRdfType] true to use rdf:type, false to use @type
+     *                (default: false). [useNativeTypes] true to convert XSD types
+     *                into native types (boolean, integer, double), false not to
+     *                (default: true).
      * @return A JSON-LD object.
-     * @throws JsonLdError
-     *             If there is an error converting the dataset to JSON-LD.
+     * @throws JsonLdError If there is an error converting the dataset to JSON-LD.
      */
     public static Object fromRDF(Object dataset, JsonLdOptions options) throws JsonLdError {
         // handle non specified serializer case
@@ -405,12 +373,10 @@ public class JsonLdProcessor {
      * Converts an RDF dataset to JSON-LD, using the default
      * {@link JsonLdOptions}.
      *
-     * @param dataset
-     *            a serialized string of RDF in a format specified by the format
-     *            option or an RDF dataset to convert.
+     * @param dataset a serialized string of RDF in a format specified by the format
+     *                option or an RDF dataset to convert.
      * @return The JSON-LD object represented by the given RDF dataset
-     * @throws JsonLdError
-     *             If there was an error converting from RDF to JSON-LD
+     * @throws JsonLdError If there was an error converting from RDF to JSON-LD
      */
     public static Object fromRDF(Object dataset) throws JsonLdError {
         return fromRDF(dataset, new JsonLdOptions(""));
@@ -420,22 +386,18 @@ public class JsonLdProcessor {
      * Converts an RDF dataset to JSON-LD, using a specific instance of
      * {@link RDFParser}.
      *
-     * @param input
-     *            a serialized string of RDF in a format specified by the format
-     *            option or an RDF dataset to convert.
-     * @param options
-     *            the options to use: [format] the format if input is not an
-     *            array: 'application/nquads' for N-Quads (default).
-     *            [useRdfType] true to use rdf:type, false to use @type
-     *            (default: false). [useNativeTypes] true to convert XSD types
-     *            into native types (boolean, integer, double), false not to
-     *            (default: true).
-     * @param parser
-     *            A specific instance of {@link RDFParser} to use for the
-     *            conversion.
+     * @param input   a serialized string of RDF in a format specified by the format
+     *                option or an RDF dataset to convert.
+     * @param options the options to use: [format] the format if input is not an
+     *                array: 'application/nquads' for N-Quads (default).
+     *                [useRdfType] true to use rdf:type, false to use @type
+     *                (default: false). [useNativeTypes] true to convert XSD types
+     *                into native types (boolean, integer, double), false not to
+     *                (default: true).
+     * @param parser  A specific instance of {@link RDFParser} to use for the
+     *                conversion.
      * @return A JSON-LD object.
-     * @throws JsonLdError
-     *             If there is an error converting the dataset to JSON-LD.
+     * @throws JsonLdError If there is an error converting the dataset to JSON-LD.
      */
     public static Object fromRDF(Object input, JsonLdOptions options, RDFParser parser)
             throws JsonLdError {
@@ -465,15 +427,12 @@ public class JsonLdProcessor {
      * Converts an RDF dataset to JSON-LD, using a specific instance of
      * {@link RDFParser}, and the default {@link JsonLdOptions}.
      *
-     * @param input
-     *            a serialized string of RDF in a format specified by the format
-     *            option or an RDF dataset to convert.
-     * @param parser
-     *            A specific instance of {@link RDFParser} to use for the
-     *            conversion.
+     * @param input  a serialized string of RDF in a format specified by the format
+     *               option or an RDF dataset to convert.
+     * @param parser A specific instance of {@link RDFParser} to use for the
+     *               conversion.
      * @return A JSON-LD object.
-     * @throws JsonLdError
-     *             If there is an error converting the dataset to JSON-LD.
+     * @throws JsonLdError If there is an error converting the dataset to JSON-LD.
      */
     public static Object fromRDF(Object input, RDFParser parser) throws JsonLdError {
         return fromRDF(input, new JsonLdOptions(""), parser);
@@ -482,22 +441,18 @@ public class JsonLdProcessor {
     /**
      * Outputs the RDF dataset found in the given JSON-LD object.
      *
-     * @param input
-     *            the JSON-LD input.
-     * @param callback
-     *            A callback that is called when the input has been converted to
-     *            Quads (null to use options.format instead).
-     * @param options
-     *            the options to use: [base] the base IRI to use. [format] the
-     *            format to use to output a string: 'application/nquads' for
-     *            N-Quads (default). [loadContext(url, callback(err, url,
-     *            result))] the context loader.
+     * @param input    the JSON-LD input.
+     * @param callback A callback that is called when the input has been converted to
+     *                 Quads (null to use options.format instead).
+     * @param options  the options to use: [base] the base IRI to use. [format] the
+     *                 format to use to output a string: 'application/nquads' for
+     *                 N-Quads (default). [loadContext(url, callback(err, url,
+     *                 result))] the context loader.
      * @return The result of executing
-     *         {@link JsonLdTripleCallback#call(RDFDataset)} on the results, or
-     *         if {@link JsonLdOptions#format} is not null, a result in that
-     *         format if it is found, or otherwise the raw {@link RDFDataset}.
-     * @throws JsonLdError
-     *             If there is an error converting the dataset to JSON-LD.
+     * {@link JsonLdTripleCallback#call(RDFDataset)} on the results, or
+     * if {@link JsonLdOptions#format} is not null, a result in that
+     * format if it is found, or otherwise the raw {@link RDFDataset}.
+     * @throws JsonLdError If there is an error converting the dataset to JSON-LD.
      */
     public static Object toRDF(Object input, JsonLdTripleCallback callback, JsonLdOptions options)
             throws JsonLdError {
@@ -540,16 +495,13 @@ public class JsonLdProcessor {
     /**
      * Outputs the RDF dataset found in the given JSON-LD object.
      *
-     * @param input
-     *            the JSON-LD input.
-     * @param options
-     *            the options to use: [base] the base IRI to use. [format] the
-     *            format to use to output a string: 'application/nquads' for
-     *            N-Quads (default). [loadContext(url, callback(err, url,
-     *            result))] the context loader.
+     * @param input   the JSON-LD input.
+     * @param options the options to use: [base] the base IRI to use. [format] the
+     *                format to use to output a string: 'application/nquads' for
+     *                N-Quads (default). [loadContext(url, callback(err, url,
+     *                result))] the context loader.
      * @return A JSON-LD object.
-     * @throws JsonLdError
-     *             If there is an error converting the dataset to JSON-LD.
+     * @throws JsonLdError If there is an error converting the dataset to JSON-LD.
      */
     public static Object toRDF(Object input, JsonLdOptions options) throws JsonLdError {
         return toRDF(input, null, options);
@@ -559,14 +511,11 @@ public class JsonLdProcessor {
      * Outputs the RDF dataset found in the given JSON-LD object, using the
      * default {@link JsonLdOptions}.
      *
-     * @param input
-     *            the JSON-LD input.
-     * @param callback
-     *            A callback that is called when the input has been converted to
-     *            Quads (null to use options.format instead).
+     * @param input    the JSON-LD input.
+     * @param callback A callback that is called when the input has been converted to
+     *                 Quads (null to use options.format instead).
      * @return A JSON-LD object.
-     * @throws JsonLdError
-     *             If there is an error converting the dataset to JSON-LD.
+     * @throws JsonLdError If there is an error converting the dataset to JSON-LD.
      */
     public static Object toRDF(Object input, JsonLdTripleCallback callback) throws JsonLdError {
         return toRDF(input, callback, new JsonLdOptions(""));
@@ -576,11 +525,9 @@ public class JsonLdProcessor {
      * Outputs the RDF dataset found in the given JSON-LD object, using the
      * default {@link JsonLdOptions}.
      *
-     * @param input
-     *            the JSON-LD input.
+     * @param input the JSON-LD input.
      * @return A JSON-LD object.
-     * @throws JsonLdError
-     *             If there is an error converting the dataset to JSON-LD.
+     * @throws JsonLdError If there is an error converting the dataset to JSON-LD.
      */
     public static Object toRDF(Object input) throws JsonLdError {
         return toRDF(input, new JsonLdOptions(""));
@@ -590,37 +537,36 @@ public class JsonLdProcessor {
      * Performs RDF dataset normalization on the given JSON-LD input. The output
      * is an RDF dataset unless the 'format' option is used.
      *
-     * @param input
-     *            the JSON-LD input to normalize.
-     * @param options
-     *            the options to use: [base] the base IRI to use. [format] the
-     *            format if output is a string: 'application/nquads' for
-     *            N-Quads. [loadContext(url, callback(err, url, result))] the
-     *            context loader.
+     * @param input   the JSON-LD input to normalize.
+     * @param options the options to use: [base] the base IRI to use. [format] the
+     *                format if output is a string: 'application/nquads' for
+     *                N-Quads. [loadContext(url, callback(err, url, result))] the
+     *                context loader.
      * @return The JSON-LD object
-     * @throws JsonLdError
-     *             If there is an error normalizing the dataset.
+     * @throws JsonLdError If there is an error normalizing the dataset.
      */
-    public static Object normalize(Object input, JsonLdOptions options) throws JsonLdError {
 
+
+    public static Object normalize(Object input, JsonLdOptions options) throws JsonLdError {
         final JsonLdOptions opts = new JsonLdOptions(options.getBase());
         opts.format = null;
         final RDFDataset dataset = (RDFDataset) toRDF(input, opts);
 
-        return new JsonLdApi(options).normalize(dataset);
+        return new JsonLdApi(options).normalize(dataset, options);
     }
+
 
     /**
      * Performs RDF dataset normalization on the given JSON-LD input. The output
      * is an RDF dataset unless the 'format' option is used. Uses the default
      * {@link JsonLdOptions}.
      *
-     * @param input
-     *            the JSON-LD input to normalize.
+     * @param input the JSON-LD input to normalize.
      * @return The JSON-LD object
-     * @throws JsonLdError
-     *             If there is an error normalizing the dataset.
+     * @throws JsonLdError If there is an error normalizing the dataset.
      */
+
+
     public static Object normalize(Object input) throws JsonLdError {
         return normalize(input, new JsonLdOptions(""));
     }

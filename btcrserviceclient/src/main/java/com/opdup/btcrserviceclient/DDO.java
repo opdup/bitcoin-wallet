@@ -1,17 +1,10 @@
 package com.opdup.btcrserviceclient;
 
-import com.github.jsonldjava.core.DocumentLoader;
-import com.github.jsonldjava.core.JsonLdOptions;
-import com.github.jsonldjava.core.JsonLdProcessor;
-import com.github.jsonldjava.utils.JsonUtils;
+import com.github.jsonldjava.utils.JsonNormalizer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class DDO {
 
@@ -45,7 +38,6 @@ public class DDO {
             String outputIndex;
             String blocktime;
             String time;
-            //String timeReceveid = "";  // Same as blocktime?
             int burnFee;
 
             JSONArray txs = resolve.getJSONArray(0);
@@ -125,20 +117,19 @@ public class DDO {
     }
 
     public String getDDO() {
+
         String ddo = "";
-        try {
-            DocumentLoader dl = new DocumentLoader();
-            JsonLdOptions options = new JsonLdOptions();
-            String jsonContext = "";
-            dl.addInjectedDoc("https://w3id.org/btcr/v1", jsonContext);
-            options.setDocumentLoader(dl);
-            Object jsonObject = JsonUtils.fromString(setDDO().toString());
-            Map context = new HashMap();
-            Object compact = JsonLdProcessor.compact(jsonObject, context, options);
-            ddo = JsonUtils.toPrettyString(compact);
-        } catch (IOException e) {
-            System.err.print("IOException: " + e.getMessage());
-        }
+
+        Object document = setDDO();
+
+        new JsonNormalizer(document, new JsonNormalizer.OnNormalizedCompleted() {
+            @Override
+            public void OnNormalizedComplete(Object object) {
+                String normalized = (String) object;
+            }
+        }).execute();
+
+        ddo = document.toString();
         return ddo;
     }
 

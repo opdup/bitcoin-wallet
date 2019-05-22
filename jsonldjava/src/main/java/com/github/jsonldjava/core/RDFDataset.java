@@ -1,5 +1,6 @@
 package com.github.jsonldjava.core;
 
+
 import static com.github.jsonldjava.core.JsonLdConsts.RDF_FIRST;
 import static com.github.jsonldjava.core.JsonLdConsts.RDF_LANGSTRING;
 import static com.github.jsonldjava.core.JsonLdConsts.RDF_NIL;
@@ -28,6 +29,10 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
+ * Created by noah on 09/04/17.
+ */
+
+/**
  * Starting to migrate away from using plain java Maps as the internal RDF
  * dataset store. Currently each item just wraps a Map based on the old format
  * so everything doesn't break. Will phase this out once everything is using the
@@ -46,25 +51,35 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
     public static class Quad extends LinkedHashMap<String, Object> implements Comparable<Quad> {
         private static final long serialVersionUID = -7021918051975883082L;
 
+        public Quad(final Map<String, Map<String, String>> component, final String graph) {
+            this(component.get("subject"), component.get("predicate"), component.get("object"), graph);
+        }
+
+        public Quad(final Map<String, String> subject, final Map<String, String> predicate,
+                    final Map<String, String> object, final String graph) {
+            this(subject.get("type").equals("blank node") ? new BlankNode(subject) : new IRI(subject),
+                    new IRI(predicate), object.get("type").equals("blank node") ? new BlankNode(object) : new IRI(object), graph);
+        }
+
         public Quad(final String subject, final String predicate, final String object,
-                final String graph) {
+                    final String graph) {
             this(subject, predicate,
                     object.startsWith("_:") ? new BlankNode(object) : new IRI(object), graph);
         };
 
         public Quad(final String subject, final String predicate, final String value,
-                final String datatype, final String language, final String graph) {
+                    final String datatype, final String language, final String graph) {
             this(subject, predicate, new Literal(value, datatype, language), graph);
-        };
+        }
 
         private Quad(final String subject, final String predicate, final Node object,
-                final String graph) {
+                     final String graph) {
             this(subject.startsWith("_:") ? new BlankNode(subject) : new IRI(subject),
                     new IRI(predicate), object, graph);
-        };
+        }
 
         public Quad(final Node subject, final Node predicate, final Node object,
-                final String graph) {
+                    final String graph) {
             super();
             put("subject", subject);
             put("predicate", predicate);
@@ -167,8 +182,6 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
         /**
          * Converts an RDF triple object to a JSON-LD object.
          *
-         * @param o
-         *            the RDF triple object to convert.
          * @param useNativeTypes
          *            true to output native types, false not to.
          *
@@ -209,10 +222,10 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
                             rval.put("@type", type);
                         }
                     } else if (
-                    // http://www.w3.org/TR/xmlschema11-2/#integer
-                    (XSD_INTEGER.equals(type) && PATTERN_INTEGER.matcher(value).matches())
-                            // http://www.w3.org/TR/xmlschema11-2/#nt-doubleRep
-                            || (XSD_DOUBLE.equals(type)
+                        // http://www.w3.org/TR/xmlschema11-2/#integer
+                            (XSD_INTEGER.equals(type) && PATTERN_INTEGER.matcher(value).matches())
+                                    // http://www.w3.org/TR/xmlschema11-2/#nt-doubleRep
+                                    || (XSD_DOUBLE.equals(type)
                                     && PATTERN_DOUBLE.matcher(value).matches())) {
                         try {
                             final Double d = Double.parseDouble(value);
@@ -262,12 +275,13 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
 
         @Override
         public boolean isLiteral() {
+
             return true;
         }
 
         @Override
         public boolean isIRI() {
-            return false;
+            return get("type").equals("IRI");
         }
 
         @Override
@@ -275,7 +289,8 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
             return false;
         }
 
-        private static int nullSafeCompare(String a, String b) {
+        @SuppressWarnings("rawtypes")
+        private static int nullSafeCompare(Comparable a, Comparable b) {
             if (a == null && b == null) {
                 return 0;
             }
@@ -291,7 +306,7 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
         @Override
         public int compareTo(Node o) {
             // NOTE: this will also compare getValue() early!
-            final int nodeCompare = super.compareTo(o);
+            int nodeCompare = super.compareTo(o);
             if (nodeCompare != 0) {
                 // null, different type or different value
                 return nodeCompare;
@@ -310,6 +325,11 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
 
     public static class IRI extends Node {
         private static final long serialVersionUID = 1540232072155490782L;
+
+        public IRI(Map<String, String> map) {
+            this.clear();
+            this.putAll(map);
+        }
 
         public IRI(String iri) {
             super();
@@ -336,6 +356,10 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
     public static class BlankNode extends Node {
         private static final long serialVersionUID = -2842402820440697318L;
 
+        public BlankNode(Map<String, String> map) {
+            this.clear();
+            this.putAll(map);
+        }
         public BlankNode(String attribute) {
             super();
             put("type", "blank node");
@@ -471,7 +495,7 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
      *            the language of the literal object for the triple (or null)
      */
     public void addTriple(final String subject, final String predicate, final String value,
-            final String datatype, final String language) {
+                          final String datatype, final String language) {
         addQuad(subject, predicate, value, datatype, language, "@default");
     }
 
@@ -493,7 +517,7 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
      *            the language of the literal object for the triple (or null)
      */
     public void addQuad(final String s, final String p, final String value, final String datatype,
-            final String language, String graph) {
+                        final String language, String graph) {
         if (graph == null) {
             graph = "@default";
         }
@@ -530,7 +554,7 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
      *            the graph to add this triple to
      */
     public void addQuad(final String subject, final String predicate, final String object,
-            String graph) {
+                        String graph) {
         if (graph == null) {
             graph = "@default";
         }
@@ -658,19 +682,11 @@ public class RDFDataset extends LinkedHashMap<String, Object> {
                             datatype == null ? XSD_BOOLEAN : (String) datatype, null);
                 } else if (value instanceof Double || value instanceof Float
                         || XSD_DOUBLE.equals(datatype)) {
-                    if (value instanceof Double && !Double.isFinite((double) value)) {
-                        return new Literal(Double.toString((double) value),
-                                datatype == null ? XSD_DOUBLE : (String) datatype, null);
-                    } else if (value instanceof Float && !Float.isFinite((float) value)) {
-                        return new Literal(Float.toString((float) value),
-                                datatype == null ? XSD_DOUBLE : (String) datatype, null);
-                    } else {
-                        // canonical double representation
-                        final DecimalFormat df = new DecimalFormat("0.0###############E0");
-                        df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.US));
-                        return new Literal(df.format(value),
-                                datatype == null ? XSD_DOUBLE : (String) datatype, null);
-                    }
+                    // canonical double representation
+                    final DecimalFormat df = new DecimalFormat("0.0###############E0");
+                    df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.US));
+                    return new Literal(df.format(value),
+                            datatype == null ? XSD_DOUBLE : (String) datatype, null);
                 } else {
                     final DecimalFormat df = new DecimalFormat("0");
                     return new Literal(df.format(value),

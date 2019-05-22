@@ -1,14 +1,8 @@
 package com.github.jsonldjava.core;
 
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
-//import org.apache.http.impl.client.CloseableHttpClient;
-
-import okhttp3.OkHttpClient;
-
 import com.github.jsonldjava.utils.JsonUtils;
+
+import java.net.URL;
 
 /**
  * Resolves URLs to {@link RemoteDocument}s. Subclass this class to change the
@@ -16,7 +10,7 @@ import com.github.jsonldjava.utils.JsonUtils;
  */
 public class DocumentLoader {
 
-    private final Map<String, Object> m_injectedDocs = new HashMap<>();
+    //private final Map<String, Object> m_injectedDocs = new HashMap<>();
 
     /**
      * Identifies a system property that can be set to "true" in order to
@@ -24,26 +18,6 @@ public class DocumentLoader {
      */
     public static final String DISALLOW_REMOTE_CONTEXT_LOADING = "com.github.jsonldjava.disallowRemoteContextLoading";
 
-    /**
-     * Avoid resolving a document by instead using the given serialised
-     * representation.
-     *
-     * @param url
-     *            The URL this document represents.
-     * @param doc
-     *            The serialised document as a String
-     * @return This object for fluent addition of other injected documents.
-     * @throws JsonLdError
-     *             If loading of the document failed for any reason.
-     */
-    public DocumentLoader addInjectedDoc(String url, String doc) throws JsonLdError {
-        try {
-            m_injectedDocs.put(url, JsonUtils.fromString(doc));
-            return this;
-        } catch (final Exception e) {
-            throw new JsonLdError(JsonLdError.Error.LOADING_INJECTED_CONTEXT_FAILED, url, e);
-        }
-    }
 
     /**
      * Loads the URL if possible, returning it as a RemoteDocument.
@@ -56,57 +30,29 @@ public class DocumentLoader {
      *             been disallowed.
      */
     public RemoteDocument loadDocument(String url) throws JsonLdError {
-        if (m_injectedDocs.containsKey(url)) {
-            try {
-                return new RemoteDocument(url, m_injectedDocs.get(url));
-            } catch (final Exception e) {
-                throw new JsonLdError(JsonLdError.Error.LOADING_INJECTED_CONTEXT_FAILED, url, e);
-            }
-        } else {
-            final String disallowRemote = System
-                    .getProperty(DocumentLoader.DISALLOW_REMOTE_CONTEXT_LOADING);
-            if ("true".equalsIgnoreCase(disallowRemote)) {
-                throw new JsonLdError(JsonLdError.Error.LOADING_REMOTE_CONTEXT_FAILED,
-                        "Remote context loading has been disallowed (url was " + url + ")");
-            }
 
-            try {
-                return new RemoteDocument(url, JsonUtils.fromURL(new URL(url), getHttpClient()));
-            } catch (final Exception e) {
-                throw new JsonLdError(JsonLdError.Error.LOADING_REMOTE_CONTEXT_FAILED, url, e);
-            }
+        final String disallowRemote = System
+                .getProperty(DocumentLoader.DISALLOW_REMOTE_CONTEXT_LOADING);
+
+        if ("true".equalsIgnoreCase(disallowRemote)) {
+            throw new JsonLdError(JsonLdError.Error.LOADING_REMOTE_CONTEXT_FAILED, "Remote context loading has been disallowed (url was " + url + ")");
         }
-    }
 
-    private volatile OkHttpClient httpClient;
-
-    /**
-     * Get the {@link OkHttpClient} which will be used by this
-     * DocumentLoader to resolve HTTP and HTTPS resources.
-     *
-     * @return The {@link OkHttpClient} which this DocumentLoader uses.
-     */
-    public OkHttpClient getHttpClient() {
-        OkHttpClient result = httpClient;
-        if (result == null) {
-            synchronized (DocumentLoader.class) {
-                result = httpClient;
-                if (result == null) {
-                    result = httpClient = JsonUtils.getDefaultHttpClient();
-                }
-            }
+        final RemoteDocument doc = new RemoteDocument(url, null);
+        try {
+            doc.setDocument(JsonUtils.fromURL(new URL(url)/*, getHttpClient()*/));
+        } catch (final Exception e) {
+            throw new JsonLdError(JsonLdError.Error.LOADING_REMOTE_CONTEXT_FAILED, url, e);
         }
-        return result;
+        return doc;
     }
 
     /**
-     * Call this method to override the default CloseableHttpClient provided by
-     * JsonUtils.getDefaultHttpClient.
+     * An HTTP Accept header that prefers JSONLD.
      *
-     * @param nextHttpClient
-     *            The {@link OkHttpClient} to replace the default with.
+     * @deprecated Use {@link JsonUtils#ACCEPT_HEADER} instead.
      */
-    public void setHttpClient(OkHttpClient nextHttpClient) {
-        httpClient = nextHttpClient;
-    }
+    @Deprecated
+    public static final String ACCEPT_HEADER = JsonUtils.ACCEPT_HEADER;
+
 }

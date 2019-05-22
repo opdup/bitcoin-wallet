@@ -1,7 +1,8 @@
 package com.github.jsonldjava.core;
 
-import static com.github.jsonldjava.core.JsonLdUtils.compareShortestLeast;
-import static com.github.jsonldjava.utils.Obj.newMap;
+import com.github.jsonldjava.core.JsonLdError.Error;
+import com.github.jsonldjava.utils.JsonLdUrl;
+import com.github.jsonldjava.utils.Obj;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,9 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.github.jsonldjava.core.JsonLdError.Error;
-import com.github.jsonldjava.utils.JsonLdUrl;
-import com.github.jsonldjava.utils.Obj;
+import static com.github.jsonldjava.core.JsonLdUtils.compareShortestLeast;
+import static com.github.jsonldjava.utils.Obj.newMap;
 
 /**
  * A helper class which still stores all the values in a map but gives member
@@ -23,7 +23,7 @@ import com.github.jsonldjava.utils.Obj;
  */
 public class Context extends LinkedHashMap<String, Object> {
 
-    private static final long serialVersionUID = 2894534897574805571L;
+    //private static final long serialVersionUID = 2894534897574805571L;
 
     private JsonLdOptions options;
     private Map<String, Object> termDefinitions;
@@ -164,7 +164,7 @@ public class Context extends LinkedHashMap<String, Object> {
      *             If there is an error parsing the contexts.
      */
     private Context parse(Object localContext, List<String> remoteContexts,
-            boolean parsingARemoteContext) throws JsonLdError {
+                          boolean parsingARemoteContext) throws JsonLdError {
         if (remoteContexts == null) {
             remoteContexts = new ArrayList<String>();
         }
@@ -286,7 +286,7 @@ public class Context extends LinkedHashMap<String, Object> {
         return result;
     }
 
-    private void checkEmptyKey(final Map<String, Object> map) {
+    private void  checkEmptyKey(final Map<String, Object> map) {
         if (map.containsKey("")) {
             // the term MUST NOT be an empty string ("")
             // https://www.w3.org/TR/json-ld/#h3_terms
@@ -304,9 +304,8 @@ public class Context extends LinkedHashMap<String, Object> {
      *
      * http://json-ld.org/spec/latest/json-ld-api/#create-term-definition
      *
-     * @param result
      * @param context
-     * @param key
+     * @param term
      * @param defined
      * @throws JsonLdError
      */
@@ -322,8 +321,8 @@ public class Context extends LinkedHashMap<String, Object> {
         defined.put(term, false);
 
         if (JsonLdUtils.isKeyword(term)
-                && !(options.getAllowContainerSetOnType() && JsonLdConsts.TYPE.equals(term)
-                        && !(context.get(term)).toString().contains(JsonLdConsts.ID))) {
+                /*&& !(options.getAllowContainerSetOnType() && JsonLdConsts.TYPE.equals(term)
+                        && !(context.get(term)).toString().contains(JsonLdConsts.ID))*/) {
             throw new JsonLdError(Error.KEYWORD_REDEFINITION, term);
         }
 
@@ -516,7 +515,8 @@ public class Context extends LinkedHashMap<String, Object> {
         }
         // 3)
         if (vocab && this.termDefinitions.containsKey(value)) {
-            final Map<String, Object> td = (Map<String, Object>) this.termDefinitions.get(value);
+            final Map<String, Object> td = (LinkedHashMap<String, Object>) this.termDefinitions
+                    .get(value);
             if (td != null) {
                 return (String) td.get(JsonLdConsts.ID);
             } else {
@@ -572,7 +572,7 @@ public class Context extends LinkedHashMap<String, Object> {
      *            the IRI to compact.
      * @param value
      *            the value to check or null.
-     * @param relativeTo
+     * @param relativeToVocab
      *            options for how to compact IRIs: vocab: true to split
      *            after @vocab, false not to.
      * @param reverse

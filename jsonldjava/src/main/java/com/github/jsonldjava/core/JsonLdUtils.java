@@ -1,12 +1,12 @@
 package com.github.jsonldjava.core;
 
+import com.github.jsonldjava.utils.Obj;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-
-import com.github.jsonldjava.utils.Obj;
 
 public class JsonLdUtils {
 
@@ -15,11 +15,8 @@ public class JsonLdUtils {
     /**
      * Returns whether or not the given value is a keyword (or a keyword alias).
      *
-     * @param v
+     * @param key
      *            the value to check.
-     * @param [ctx]
-     *            the active context to check against.
-     *
      * @return true if the value is a keyword, false if not.
      */
     static boolean isKeyword(Object key) {
@@ -190,7 +187,7 @@ public class JsonLdUtils {
      *            the active context used to compact the input.
      * @param input
      *            the framed, compacted output.
-     * @param options
+     * @param opts
      *            the compaction options used.
      *
      * @return the resulting output.
