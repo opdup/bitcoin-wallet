@@ -135,7 +135,7 @@ public class BTCRDIDResolver {
         } catch (JSONException e) {
             System.err.print("JSONException: " + e.getMessage());
         }
-        return values[1] + " " + tip;
+        return values[1] /*+ " " + tip*/;
     }
 
 

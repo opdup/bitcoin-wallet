@@ -1,7 +1,6 @@
 package com.opdup.btcrserviceclient;
 
 import com.github.jsonldjava.utils.JsonNormalizer;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,10 +20,9 @@ public class DDO {
         this.resolve = resolve;
     }
 
-    private JSONArray getSatoshiAuditTrail() {
+    private JSONObject getSatoshiAuditTrail() {
 
-        JSONObject satoshi;
-        JSONArray satoshiArray = null;
+        JSONObject satoshi = new JSONObject();
 
         try {
 
@@ -32,7 +30,8 @@ public class DDO {
             if (chain.equals("txtest")) {
                 chain = "testnet";
             }
-            String blockIndex = decode.getString("position");
+
+            String blockIndex = decode.getString("Position");
 
             String blockHash;
             String outputIndex;
@@ -40,9 +39,9 @@ public class DDO {
             String time;
             int burnFee;
 
-            JSONArray txs = resolve.getJSONArray(0);
-            JSONObject tx = txs.getJSONObject(0);
-            blockHash = tx.getString("blockhash");
+            JSONObject tx = resolve.getJSONObject(0);
+
+            blockHash = tx.getString("hash");   //######################## Error: no value for blockhash
             time = tx.getString("time");
             blocktime = tx.getString("blocktime");
 
@@ -54,7 +53,6 @@ public class DDO {
             burnFee = voutValue - vinValue;
             outputIndex = vout.getString(1);
 
-            satoshi = new JSONObject();
             satoshi.put("chain", chain);
             satoshi.put("blockhash", blockHash);
             satoshi.put("blockindex", blockIndex);
@@ -64,12 +62,11 @@ public class DDO {
             satoshi.put("timereceived", time);
             satoshi.put("burn-fee", burnFee);
 
-            satoshiArray = new JSONArray(satoshi);
         } catch (JSONException e) {
             System.err.print("JSONException: " + e.getMessage());
         }
 
-        return satoshiArray;
+        return satoshi;
     }
 
     private JSONObject setDDO() {
@@ -85,29 +82,23 @@ public class DDO {
             pk.put("type", "EdDsaSAPublicKeySecp256k1");
             pk.put("publicKeyHex", pubKey);
 
-            JSONArray pkArray = new JSONArray(pk);
-
-            object.put("publicKey", pkArray);
+            object.put("publicKey", pk);
 
             JSONObject auth = new JSONObject();
-            auth.put("type", "EdDsaSAPublicKeySecp256k1Authentication");
+            auth.put("type", "EcDsaSAPublicKeySecp256k1Authentication");
             auth.put("publicKey", "#Key01"); // #Key
 
-            JSONArray authArray = new JSONArray(auth);
-
-            object.put("authentication", authArray);
+            object.put("authentication", auth);
 
             JSONObject service = new JSONObject();
             service.put("type", "BTCREndpoint");
             service.put("serviceEndpoint", "https://raw.githubusercontent.com/kimdhamilton/did/master/ddo.jsonld");
 
-            JSONArray serviceArray = new JSONArray(service);
+            object.put("service", service);
 
-            object.put("service", serviceArray);
+            JSONObject satoshi = getSatoshiAuditTrail();
 
-            JSONArray satoshiArray = getSatoshiAuditTrail();
-
-            object.put("SatoshiAuditTrail", satoshiArray);
+            object.put("SatoshiAuditTrail", satoshi);
 
         } catch (JSONException e) {
             System.err.print("JSONException: " + e.getMessage());
@@ -129,7 +120,14 @@ public class DDO {
             }
         }).execute();
 
+        /*try {
+            ddo = JsonUtils.toPrettyString(document);
+        } catch (IOException e) {
+            System.err.println("IOException: " + e.getMessage());
+        }*/
+
         ddo = document.toString();
+
         return ddo;
     }
 

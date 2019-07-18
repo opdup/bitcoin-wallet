@@ -1,7 +1,6 @@
 package com.opdup.btcrserviceclient;
 
 import android.util.Pair;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
